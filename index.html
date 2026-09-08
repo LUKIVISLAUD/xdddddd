@@ -21,11 +21,13 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
 
+        /* SKALOWANIE 2K/4K */
         html { font-size: 16px; } 
         @media (min-width: 2000px) { html { font-size: 18px; } }
         @media (min-width: 2500px) { html { font-size: 21px; } }
         @media (min-width: 3800px) { html { font-size: 24px; } }
 
+        /* DOPASOWANIE POD TELEFON */
         @media (max-width: 768px) {
             body { padding: 1rem !important; }
             .top-bar { 
@@ -188,6 +190,7 @@
         .badge-ps { background: var(--ps-brand); }
         .badge-xbox { background: var(--xbox-brand); }
         .badge-pc { background: #444; }
+        .rating-row { color: #ffb800; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
 
         .note-input {
             width: 100%;
@@ -220,6 +223,7 @@
         .sugg-item { display: flex; align-items: center; gap: 1.2rem; padding: 1.2rem; cursor: pointer; border-bottom: 1px solid var(--glass-border); }
         .sugg-item:hover { background: rgba(255,255,255,0.05); }
         .sugg-item img { width: 5.5rem; aspect-ratio: 16/9; border-radius: 0.7rem; object-fit: cover; }
+        .sugg-empty { padding: 1.2rem; color: var(--text-dim); text-align: center; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -288,8 +292,7 @@
             }
         });
 
-        // Twój działający link z Cloudflare Worker Proxy do IGDB
-        const IGDB_PROXY_URL = 'https://xddd.oliwier16056.workers.dev';
+        const API_KEY = 'f2039f26b654490688e104244980714c';
         
         let state = JSON.parse(localStorage.getItem('gt_v8_liquid')) || { toPlay: [], completed: [] };
         
@@ -301,7 +304,7 @@
         let debounceTimer;
         
         const saveOnly = () => localStorage.setItem('gt_v8_liquid', JSON.stringify(state));
-        const optimizeImg = (url) => url ? url : 'https://via.placeholder.com/1280x720';
+        const optimizeImg = (url) => url ? url.replace('/media/', '/media/resize/1280/-/') : 'https://via.placeholder.com/1280x720';
 
         const searchInput = document.getElementById('searchInput');
         const suggBox = document.getElementById('suggestions');
@@ -309,7 +312,7 @@
 
         searchInput.addEventListener('input', (e) => {
             const val = e.target.value.trim();
-            if (val.length < 3) { 
+            if (val.length < 2) { 
                 suggBox.style.display = 'none'; 
                 loader.style.display = 'none';
                 return; 
@@ -319,48 +322,34 @@
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(async () => {
                 try {
-                    const res = await fetch(IGDB_PROXY_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: `search "${val}"; fields name, cover.url, screenshots.url, rating, platforms.name, first_release_date; limit 6;`
-                    });
+                    const res = await fetch(`https://api.rawg.io/api/games?key=${API_KEY}&search=${encodeURIComponent(val)}&page_size=6`);
+                    const data = await res.json();
+                    currentSearchData = data.results || [];
                     
-                    const rawData = await res.json();
-                    
-                    currentSearchData = (rawData || []).map(g => {
-                        const coverUrl = g.cover ? 'https:' + g.cover.url.replace('t_thumb', 't_1080p') : '';
-                        const screenshotUrls = g.screenshots ? g.screenshots.map(s => 'https:' + s.url.replace('t_thumb', 't_1080p')) : [];
-                        const shots = screenshotUrls.length > 0 ? screenshotUrls : (coverUrl ? [coverUrl] : []);
-
-                        return {
-                            id: g.id,
-                            name: g.name,
-                            released: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear().toString() : '',
-                            background_image: shots[0] || '',
-                            short_screenshots: shots.map(url => ({ image: url })),
-                            rating: g.rating ? (g.rating / 20) : 0,
-                            platforms: g.platforms ? g.platforms.map(p => ({ platform: { name: p.name } })) : []
-                        };
-                    });
-                    
-                    suggBox.innerHTML = currentSearchData.map((g, i) => {
-                        const releaseYear = g.released || '';
-                        return `
-                        <div class="sugg-item" onclick="openPlatformModal(${i})">
-                            <img src="${optimizeImg(g.background_image)}">
-                            <div>
-                                <div style="font-weight:800; font-size:1.1rem;">${g.name}</div>
-                                <div style="font-size:0.9rem; color:var(--text-dim); margin-top:0.2rem;">${releaseYear}</div>
-                            </div>
-                        </div>`;
-                    }).join('');
+                    if (currentSearchData.length === 0) {
+                        suggBox.innerHTML = `<div class="sugg-empty">Brak wyników wyszukiwania</div>`;
+                    } else {
+                        suggBox.innerHTML = currentSearchData.map((g, i) => {
+                            const releaseYear = g.released ? g.released.split('-')[0] : 'b.d.';
+                            return `
+                            <div class="sugg-item" onclick="openPlatformModal(${i})">
+                                <img src="${optimizeImg(g.background_image)}">
+                                <div>
+                                    <div style="font-weight:800; font-size:1.1rem;">${g.name}</div>
+                                    <div style="font-size:0.9rem; color:var(--text-dim); margin-top:0.2rem;">${releaseYear}</div>
+                                </div>
+                            </div>`;
+                        }).join('');
+                    }
                     suggBox.style.display = 'flex';
                 } catch (err) { 
                     console.error(err); 
+                    suggBox.innerHTML = `<div class="sugg-empty">Błąd pobierania danych</div>`;
+                    suggBox.style.display = 'flex';
                 } finally { 
                     loader.style.display = 'none'; 
                 }
-            }, 500);
+            }, 300);
         });
 
         window.openPlatformModal = function(index) {
@@ -466,7 +455,7 @@
                     <div class="game-info">
                         <div class="platform-badge ${pCls}">${g.platform}</div>
                         <div class="game-title">${g.name}</div>                        
-                        <input type="text" class="note-input" placeholder="" value="${g.note || ''}" onchange="saveGameNote('${g.id}', '${type}', this)">
+                        <input type="text" class="note-input" placeholder="Notatka..." value="${g.note || ''}" onchange="saveGameNote('${g.id}', '${type}', this)">
                     </div>
                 </div>`;
             }).join('');
@@ -482,6 +471,14 @@
 
         window.exportData = () => { const blob = new Blob([JSON.stringify(state)], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = "biblioteka.json"; a.click(); };
         window.importData = (e) => { const reader = new FileReader(); reader.onload = (ev) => { state = JSON.parse(ev.target.result); saveOnly(); render(true); }; reader.readAsText(e.target.files[0]); };
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                suggBox.style.display = 'none';
+            }
+        });
+
         window.onclick = (e) => { if (!e.target.closest('.search-container')) suggBox.style.display = 'none'; };
         render(true);
     </script>
