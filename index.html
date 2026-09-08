@@ -21,13 +21,9 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
 
-        /* SKALOWANIE 2K/4K */
         html { font-size: 16px; } 
-        @media (min-width: 2000px) { html { font-size: 18px; } }
-        @media (min-width: 2500px) { html { font-size: 21px; } }
-        @media (min-width: 3800px) { html { font-size: 24px; } }
+        @media (min-width: 2500px) { html { font-size: 20px; } }
 
-        /* DOPASOWANIE POD TELEFON */
         @media (max-width: 768px) {
             body { padding: 1rem !important; }
             .top-bar { 
@@ -43,7 +39,7 @@
             .tools-container { width: 100%; justify-content: space-between; gap: 0.5rem; }
             .tool-btn { flex: 1; justify-content: center; height: 3rem; font-size: 0.8rem; padding: 0.5rem; }
             .main-content { padding-top: 14rem !important; }
-            .gallery-nav, .card-overlay { opacity: 1 !important; }
+            .card-overlay { opacity: 1 !important; }
             .modal-content { width: 95%; padding: 1.5rem; border-radius: 1.5rem; }
             .platform-btn { padding: 0.8rem 1rem; font-size: 0.9rem; }
         }
@@ -59,18 +55,20 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        @keyframes cardEnter {
-            from { opacity: 0; transform: translateY(15px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+        /* Animacja wejścia gier */
+        @keyframes staggeredCardEntrance {
+            from {
+                opacity: 0;
+                transform: translateY(25px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
-        .card-exit-anim {
-            opacity: 0 !important;
-            transform: scale(0.9) !important;
-            transition: 0.3s var(--bezier) !important;
-        }
-
-        #platformModal {
+        /* Modale */
+        #platformModal, #deleteModal {
             display: none;
             position: fixed;
             inset: 0;
@@ -82,8 +80,8 @@
         .modal-content {
             background: #111;
             border: 1px solid var(--glass-border);
-            padding: 3rem; border-radius: 2.5rem;
-            max-width: 500px; width: 90%; text-align: center;
+            padding: 2.5rem 3rem; border-radius: 2.5rem;
+            max-width: 480px; width: 90%; text-align: center;
             box-shadow: 0 0 50px rgba(0,0,0,0.5);
         }
         .platform-list { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin: 2rem 0; }
@@ -97,6 +95,26 @@
         .btn-ps:hover { background: var(--ps-brand) !important; border-color: white; box-shadow: 0 0 25px rgba(0, 67, 156, 0.6); }
         .btn-xbox:hover { background: var(--xbox-brand) !important; border-color: white; box-shadow: 0 0 25px rgba(16, 124, 16, 0.6); }
         .btn-pc:hover { background: #444 !important; border-color: white; box-shadow: 0 0 25px rgba(255, 255, 255, 0.15); }
+
+        .btn-confirm-yes {
+            background: #ef4444 !important;
+            border-color: #ef4444 !important;
+            color: #fff;
+        }
+        .btn-confirm-yes:hover {
+            background: #dc2626 !important;
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.6);
+        }
+
+        .btn-confirm-no {
+            background: #10b981 !important;
+            border-color: #10b981 !important;
+            color: #fff;
+        }
+        .btn-confirm-no:hover {
+            background: #059669 !important;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+        }
 
         .top-bar {
             display: flex; justify-content: space-between; align-items: center;
@@ -138,6 +156,29 @@
         .search-loader { position: absolute; right: 1.2rem; color: var(--text-dim); font-size: 1.1rem; display: none; }
 
         .tools-container { display: flex; align-items: center; gap: 1rem; }
+        
+        .tooltip-wrap { position: relative; display: inline-flex; }
+        .tooltip-wrap::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: -2.2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: #111;
+            color: #fff;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.7rem;
+            border-radius: 0.4rem;
+            white-space: nowrap;
+            border: 1px solid var(--glass-border);
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.2s var(--bezier);
+            pointer-events: none;
+            z-index: 3000;
+        }
+        .tooltip-wrap:hover::after { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+
         .tool-btn {
             background: rgba(255, 255, 255, 0.06); border: 1px solid var(--glass-border);
             color: white; padding: 0.8rem; border-radius: 1.1rem;
@@ -151,57 +192,116 @@
             padding-top: 8rem;
         }
 
-        .game-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2rem; margin-bottom: 5rem; width: 100%; }
-        @media (min-width: 2500px) { .game-grid { grid-template-columns: repeat(6, 1fr); } }
-        @media (max-width: 1600px) { .game-grid { grid-template-columns: repeat(4, 1fr); } }
-        @media (max-width: 1200px) { .game-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 800px) { .game-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 500px) { .game-grid { grid-template-columns: 1fr; } }
-
-        .game-card {
-            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border-radius: 1.8rem;
-            overflow: hidden; border: 1px solid var(--glass-border);
-            transition: transform 0.4s var(--bezier), border-color 0.4s, box-shadow 0.4s;
-            animation: cardEnter 0.5s var(--bezier) backwards;
-            backface-visibility: hidden; transform: translateZ(0);
+        .game-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 1.2rem; 
+            margin-bottom: 5rem; 
+            width: 100%; 
         }
-        .img-box { width: 100%; aspect-ratio: 16 / 9; overflow: hidden; position: relative; background: #000; }
-        .img-box img { width: 100%; height: 101%; object-fit: cover; transition: 0.8s var(--bezier); backface-visibility: hidden; }
-        .game-card:hover { transform: translateY(-10px) translateZ(0); border-color: rgba(255,255,255,0.4); box-shadow: 0 30px 60px rgba(0,0,0,0.7); }
-        .game-card:hover img { transform: scale(1.1) translateZ(0); }
+        @media (min-width: 2500px) { .game-grid { grid-template-columns: repeat(9, 1fr); } }
+        @media (max-width: 1600px) { .game-grid { grid-template-columns: repeat(6, 1fr); } }
+        @media (max-width: 1300px) { .game-grid { grid-template-columns: repeat(5, 1fr); } }
+        @media (max-width: 1000px) { .game-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 700px) { .game-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        /* KARTA GIER */
+        .game-card {
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(20px); 
+            border-radius: 1.2rem;
+            overflow: hidden; 
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s var(--bezier), opacity 0.3s var(--bezier), border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Klasa wyjścia przy kasowaniu/przenoszeniu */
+        .game-card.card-leaving {
+            opacity: 0 !important;
+            transform: scale(0.82) translateY(12px) !important;
+            pointer-events: none;
+        }
+
+        .game-card:hover { 
+            z-index: 10; 
+            transform: translateY(-6px) scale(1.05); 
+            border-color: rgba(255, 255, 255, 0.5); 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7); 
+        }
+
+        .img-box { 
+            width: 100%; 
+            aspect-ratio: 3 / 4; 
+            overflow: hidden; 
+            position: relative; 
+            background: #000; 
+        }
+        .img-box img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        /* Light Sweep Effect */
+        .img-box::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -150%;
+            width: 60%;
+            height: 200%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.35) 50%,
+                transparent 100%
+            );
+            transform: rotate(25deg);
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        @keyframes lightSweepAnimation {
+            0% { left: -150%; }
+            30% { left: 150%; }
+            100% { left: 150%; }
+        }
+
+        .game-card:hover .img-box::after {
+            animation: lightSweepAnimation 4s ease-in-out 1s infinite;
+        }
 
         .nav-arrow, .action-btn {
-            width: 2rem; height: 2rem; border-radius: 50%;
+            width: 1.8rem; height: 1.8rem; border-radius: 50%;
             background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px);
             border: 1px solid rgba(255,255,255,0.15);
             color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: 0.3s var(--bezier); z-index: 5; font-size: 0.85rem;
+            transition: 0.3s var(--bezier); z-index: 5; font-size: 0.75rem;
         }
         .nav-arrow:hover, .action-btn:hover { background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.8); transform: scale(1.1); }
 
-        .gallery-nav { position: absolute; top: 50%; width: 100%; display: flex; justify-content: space-between; padding: 0 0.8rem; transform: translateY(-50%); opacity: 0; transition: 0.3s; }
+        .gallery-nav { position: absolute; top: 50%; width: 100%; display: flex; justify-content: space-between; padding: 0 0.4rem; transform: translateY(-50%); opacity: 0; transition: 0.3s; z-index: 4; }
         .game-card:hover .gallery-nav { opacity: 1; }
-        .card-overlay { position: absolute; bottom: 0.8rem; right: 0.8rem; display: flex; gap: 0.5rem; opacity: 0; transition: 0.3s; }
+        .card-overlay { position: absolute; bottom: 0.5rem; right: 0.5rem; display: flex; gap: 0.3rem; opacity: 0; transition: 0.3s; z-index: 4; }
         .game-card:hover .card-overlay { opacity: 1; }
 
-        .game-info { padding: 1.6rem; }
-        .game-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.6rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .platform-badge { font-size: 0.7rem; padding: 0.4rem 1rem; border-radius: 0.7rem; font-weight: 800; text-transform: uppercase; color: white; display: inline-block; margin-bottom: 0.7rem; }
+        .game-info { padding: 0.8rem; }
+        .game-title { font-size: 0.9rem; font-weight: 800; margin-bottom: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .platform-badge { font-size: 0.6rem; padding: 0.25rem 0.6rem; border-radius: 0.4rem; font-weight: 800; text-transform: uppercase; color: white; display: inline-block; margin-bottom: 0.4rem; }
         .badge-ps { background: var(--ps-brand); }
         .badge-xbox { background: var(--xbox-brand); }
         .badge-pc { background: #444; }
-        .rating-row { color: #ffb800; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
 
         .note-input {
             width: 100%;
-            margin-top: 0.8rem;
+            margin-top: 0.4rem;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid transparent;
             border-bottom: 1px solid var(--glass-border);
             color: var(--text-dim);
-            padding: 0.5rem;
-            font-size: 0.85rem;
-            border-radius: 0.4rem 0.4rem 0 0;
+            padding: 0.3rem;
+            font-size: 0.75rem;
+            border-radius: 0.3rem 0.3rem 0 0;
             transition: 0.3s var(--bezier);
             outline: none;
         }
@@ -216,23 +316,39 @@
 
         .suggestions {
             position: absolute; top: 5rem; left: 0; width: 100%;
-            background: #111; border-radius: 1.5rem; overflow: hidden; display: none;
+            max-height: 400px; overflow-y: auto;
+            overscroll-behavior: contain;
+            background: #111; border-radius: 1.5rem; display: none;
             flex-direction: column; border: 1px solid var(--glass-border);
             box-shadow: 0 40px 80px rgba(0,0,0,0.9);
+            z-index: 3000;
         }
-        .sugg-item { display: flex; align-items: center; gap: 1.2rem; padding: 1.2rem; cursor: pointer; border-bottom: 1px solid var(--glass-border); }
+        .sugg-item { display: flex; align-items: center; gap: 1.2rem; padding: 1rem; cursor: pointer; border-bottom: 1px solid var(--glass-border); }
         .sugg-item:hover { background: rgba(255,255,255,0.05); }
-        .sugg-item img { width: 5.5rem; aspect-ratio: 16/9; border-radius: 0.7rem; object-fit: cover; }
+        .sugg-item img { width: 3.5rem; aspect-ratio: 3/4; border-radius: 0.5rem; object-fit: cover; }
         .sugg-empty { padding: 1.2rem; color: var(--text-dim); text-align: center; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
+    <!-- MODAL PLATFORMY -->
     <div id="platformModal">
         <div class="modal-content">
             <h2 id="modalGameName" style="margin-bottom: 1rem;">Wybierz platformę</h2>
             <div id="platformList" class="platform-list"></div>
             <button onclick="closeModal()" style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-weight:700; margin-top:1rem;">Anuluj</button>
+        </div>
+    </div>
+
+    <!-- MODAL POTWIERDZENIA USUNIĘCIA -->
+    <div id="deleteModal">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 0.5rem; font-size: 1.3rem;">Czy na pewno usunąć?</h2>
+            <div id="deleteGameName" style="color: var(--text-dim); margin-bottom: 1.8rem; font-weight: 600; font-size: 0.95rem;"></div>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button class="platform-btn btn-confirm-yes" onclick="executeDelete()" style="padding: 0.8rem 1.8rem;">TAK</button>
+                <button class="platform-btn btn-confirm-no" onclick="closeDeleteModal()" style="padding: 0.8rem 1.8rem;">NIE</button>
+            </div>
         </div>
     </div>
 
@@ -251,22 +367,30 @@
             <div id="suggestions" class="suggestions"></div>
         </div>
         <div class="tools-container">
-            <select id="sortFilter" class="tool-btn" onchange="render(true)">
-                <option value="added">Najnowsze (domyślnie)</option>
-                <option value="az">Alfabetycznie A-Z</option>
-                <option value="za">Alfabetycznie Z-A</option>
-            </select>
-            <select id="platformFilter" class="tool-btn" onchange="render(true)">
-                <option value="all">Wszystkie platformy</option>
-                <option value="PlayStation">PlayStation</option>
-                <option value="Xbox">Xbox</option>
-                <option value="PC">PC</option>
-            </select>
-            <button class="tool-btn" onclick="exportData()"><i class="fa-solid fa-download"></i></button>
-            <label class="tool-btn">
-                <i class="fa-solid fa-upload"></i>
-                <input type="file" id="importInput" style="display:none;" onchange="importData(event)">
-            </label>
+            <div class="tooltip-wrap" data-tooltip="Platformy">
+                <select id="platformFilter" class="tool-btn" onchange="applyControls()" aria-label="Filtrowanie platformy">
+                    <option value="all">Wszystkie platformy</option>
+                    <option value="PlayStation">PlayStation</option>
+                    <option value="Xbox">Xbox</option>
+                    <option value="PC">PC</option>
+                </select>
+            </div>
+            <div class="tooltip-wrap" data-tooltip="Sortowanie">
+                <select id="sortFilter" class="tool-btn" onchange="applyControls()" aria-label="Sortowanie">
+                    <option value="newest">Najnowsze</option>
+                    <option value="az">Alfabetycznie A–Z</option>
+                    <option value="za">Alfabetycznie Z–A</option>
+                </select>
+            </div>
+            <div class="tooltip-wrap" data-tooltip="Pobierz">
+                <button class="tool-btn" onclick="exportData()"><i class="fa-solid fa-download"></i></button>
+            </div>
+            <div class="tooltip-wrap" data-tooltip="Wczytaj">
+                <label class="tool-btn" style="cursor:pointer;">
+                    <i class="fa-solid fa-upload"></i>
+                    <input type="file" id="importInput" style="display:none;" onchange="importData(event)">
+                </label>
+            </div>
         </div>
     </div>
 
@@ -292,19 +416,29 @@
             }
         });
 
-        const API_KEY = 'f2039f26b654490688e104244980714c';
-        
-        let state = JSON.parse(localStorage.getItem('gt_v8_liquid')) || { toPlay: [], completed: [] };
-        
-        state.toPlay.forEach(g => g.currentShotIdx = 0);
-        state.completed.forEach(g => g.currentShotIdx = 0);
+        const WORKER_URL = 'https://xddd.oliwier16056.workers.dev';
 
+        let state = JSON.parse(localStorage.getItem('gt_v9_liquid')) || { toPlay: [], completed: [] };
+        
         let currentSearchData = [];
         let pendingGame = null;
+        let pendingDeleteId = null;
+        let pendingDeleteList = null;
+        let triggerEntranceAnim = true;
         let debounceTimer;
+
+        const savedSort = localStorage.getItem('gt_v9_sort') || 'newest';
+        const savedPlatformFilter = localStorage.getItem('gt_v9_platform_filter') || 'all';
+        document.getElementById('sortFilter').value = savedSort;
+        document.getElementById('platformFilter').value = savedPlatformFilter;
         
-        const saveOnly = () => localStorage.setItem('gt_v8_liquid', JSON.stringify(state));
-        const optimizeImg = (url) => url ? url.replace('/media/', '/media/resize/1280/-/') : 'https://via.placeholder.com/1280x720';
+        const saveOnly = () => localStorage.setItem('gt_v9_liquid', JSON.stringify(state));
+        
+        const optimizeImg = (url) => {
+            if (!url) return 'https://via.placeholder.com/600x800?text=Brak+Ok%C5%82adki';
+            let formattedUrl = url.startsWith('//') ? `https:${url}` : url;
+            return formattedUrl.replace('t_thumb', 't_cover_big').replace('t_720p', 't_cover_big');
+        };
 
         const searchInput = document.getElementById('searchInput');
         const suggBox = document.getElementById('suggestions');
@@ -322,21 +456,39 @@
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(async () => {
                 try {
-                    const res = await fetch(`https://api.rawg.io/api/games?key=${API_KEY}&search=${encodeURIComponent(val)}&page_size=6`);
-                    const data = await res.json();
-                    currentSearchData = data.results || [];
+                    const res = await fetch(WORKER_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: val
+                    });
+
+                    const games = await res.json();
+                    currentSearchData = Array.isArray(games) ? games : [];
                     
                     if (currentSearchData.length === 0) {
                         suggBox.innerHTML = `<div class="sugg-empty">Brak wyników wyszukiwania</div>`;
                     } else {
                         suggBox.innerHTML = currentSearchData.map((g, i) => {
-                            const releaseYear = g.released ? g.released.split('-')[0] : 'b.d.';
+                            const imgUrl = g.cover && g.cover.url ? g.cover.url : (g.screenshots && g.screenshots[0] ? g.screenshots[0].url : '');
+                            const ratingValue = Number(g.rating ?? g.aggregated_rating);
+                            
+                            let ratingText = Number.isFinite(ratingValue) && ratingValue > 0
+                                ? `⭐ ${Math.round(ratingValue)}/100`
+                                : 'Brak oceny';
+
+                            if (g.first_release_date) {
+                                const releaseYear = new Date(g.first_release_date * 1000).getFullYear();
+                                if (releaseYear) {
+                                    ratingText += ` &nbsp;|&nbsp; 📅 ${releaseYear}`;
+                                }
+                            }
+
                             return `
                             <div class="sugg-item" onclick="openPlatformModal(${i})">
-                                <img src="${optimizeImg(g.background_image)}">
+                                <img src="${optimizeImg(imgUrl)}">
                                 <div>
-                                    <div style="font-weight:800; font-size:1.1rem;">${g.name}</div>
-                                    <div style="font-size:0.9rem; color:var(--text-dim); margin-top:0.2rem;">${releaseYear}</div>
+                                    <div style="font-weight:800; font-size:1rem;">${g.name}</div>
+                                    <div style="font-size:0.8rem; color:var(--text-dim); margin-top:0.2rem;">${ratingText}</div>
                                 </div>
                             </div>`;
                         }).join('');
@@ -344,7 +496,7 @@
                     suggBox.style.display = 'flex';
                 } catch (err) { 
                     console.error(err); 
-                    suggBox.innerHTML = `<div class="sugg-empty">Błąd pobierania danych</div>`;
+                    suggBox.innerHTML = `<div class="sugg-empty">Błąd pobierania danych z Workera</div>`;
                     suggBox.style.display = 'flex';
                 } finally { 
                     loader.style.display = 'none'; 
@@ -358,15 +510,24 @@
             pendingGame = game;
             document.getElementById('modalGameName').innerText = game.name;
             const pList = document.getElementById('platformList');
-            const allowed = ["PC", "PlayStation 5", "PlayStation 4", "Xbox One", "Xbox Series S/X"];
-            let platforms = game.platforms ? game.platforms.map(p => p.platform.name).filter(n => allowed.includes(n)) : ["PC"];
-            if(platforms.length === 0) platforms = ["PC"];
-            pList.innerHTML = [...new Set(platforms)].map(p => {
+            
+            const possiblePlatforms = [
+                { id: 6, name: "PC", type: "pc" },
+                { id: 167, name: "PlayStation 5", type: "ps" },
+                { id: 48, name: "PlayStation 4", type: "ps" },
+                { id: 169, name: "Xbox Series X/S", type: "xbox" },
+                { id: 49, name: "Xbox One", type: "xbox" }
+            ];
+
+            const matchedPlatforms = possiblePlatforms;
+
+            pList.innerHTML = matchedPlatforms.map(p => {
                 let hCls = 'btn-pc';
-                if (p.toLowerCase().includes('playstation')) hCls = 'btn-ps';
-                if (p.toLowerCase().includes('xbox')) hCls = 'btn-xbox';
-                return `<button class="platform-btn ${hCls}" onclick="confirmAdd('${p}')">${p}</button>`;
+                if (p.type === 'ps') hCls = 'btn-ps';
+                if (p.type === 'xbox') hCls = 'btn-xbox';
+                return `<button class="platform-btn ${hCls}" onclick="confirmAdd('${p.name}')">${p.name}</button>`;
             }).join('');
+            
             document.getElementById('platformModal').style.display = 'flex';
             suggBox.style.display = 'none';
         }
@@ -375,45 +536,144 @@
 
         window.confirmAdd = (platform) => {
             if (!pendingGame) return;
-            let shots = [pendingGame.background_image];
-            if (pendingGame.short_screenshots?.length > 0) shots = pendingGame.short_screenshots.map(s => s.image);
             
+            let shots = [];
+            if (pendingGame.cover && pendingGame.cover.url) {
+                shots.push(pendingGame.cover.url);
+            }
+            if (Array.isArray(pendingGame.screenshots)) {
+                pendingGame.screenshots.forEach(s => {
+                    if (s && s.url) shots.push(s.url);
+                });
+            }
+            shots = [...new Set(shots)];
+
+            if (shots.length === 0) {
+                shots = ['https://via.placeholder.com/600x800?text=Brak+Ok%C5%82adki'];
+            }
+
+            let genres = [];
+            if (pendingGame.genres && Array.isArray(pendingGame.genres)) {
+                genres = pendingGame.genres.map(g => g.name);
+            }
+
             state.toPlay.push({ 
                 id: Math.random().toString(36).substring(2, 11), 
                 name: pendingGame.name, 
                 screenshots: shots, 
-                currentShotIdx: 0, 
+                releaseDate: pendingGame.first_release_date || 0,
                 platform: platform, 
-                rating: pendingGame.rating,
+                genres: genres,
                 note: "" 
             });
-            saveOnly(); render(true); closeModal(); searchInput.value = '';
+            
+            saveOnly();
+            triggerEntranceAnim = false;
+            renderWithTransition(); 
+            closeModal(); 
+            searchInput.value = '';
         }
 
         window.changeImg = (gameId, listType, dir, e) => {
-            e.stopPropagation();
+            if (e) e.stopPropagation();
             const game = state[listType].find(g => g.id === gameId);
-            if (game) {
-                game.currentShotIdx = (game.currentShotIdx + dir + game.screenshots.length) % game.screenshots.length;
-                e.target.closest('.img-box').querySelector('.main-img').src = optimizeImg(game.screenshots[game.currentShotIdx]);
-                saveOnly();
+            if (!game || !Array.isArray(game.screenshots) || game.screenshots.length < 2) return;
+            game.currentShotIdx = (Number(game.currentShotIdx || 0) + dir + game.screenshots.length) % game.screenshots.length;
+            const card = e && e.target ? e.target.closest('.game-card') : null;
+            const img = card ? card.querySelector('.main-img') : null;
+            if (img) img.src = optimizeImg(game.screenshots[game.currentShotIdx]);
+            saveOnly();
+        };
+
+        // Pomocnicza funkcja do płynnego wygaszania karty przed zmianą w stanie
+        function animateCardExit(cardId, callback) {
+            const cardEl = document.querySelector(`[data-id="${cardId}"]`);
+            if (cardEl) {
+                cardEl.classList.add('card-leaving');
+                setTimeout(() => {
+                    renderWithTransition(callback);
+                }, 220); // Dyskretne opóźnienie 220ms dla płynnego animowania
+            } else {
+                renderWithTransition(callback);
             }
+        }
+
+        // Pomocnicza funkcja dla View Transitions API (gładkie przesuwanie reszty kart)
+        function renderWithTransition(callback) {
+            if (callback) callback();
+            if (document.startViewTransition) {
+                document.startViewTransition(() => {
+                    render();
+                });
+            } else {
+                render();
+            }
+        }
+
+        // Przenoszenie do ukończonych
+        window.moveToDone = (id, e) => {
+            if (e) e.stopPropagation();
+            animateCardExit(id, () => {
+                const idx = state.toPlay.findIndex(g => g.id === id);
+                if (idx !== -1) {
+                    const game = state.toPlay.splice(idx, 1)[0];
+                    game.toPlayIndex = idx;
+                    state.completed.push(game);
+                    saveOnly();
+                    triggerEntranceAnim = false;
+                }
+            });
         };
 
-        const moveLogic = (id, from, to, e) => {
-            const card = e.target.closest('.game-card');
-            card.classList.add('card-exit-anim');
-            setTimeout(() => {
-                const idx = state[from].findIndex(g => g.id === id);
-                if(idx !== -1) { state[to].push(state[from].splice(idx, 1)[0]); saveOnly(); render(); }
-            }, 300);
+        // Przenoszenie z ukończonych do kolejki
+        window.moveToToPlay = (id, e) => {
+            if (e) e.stopPropagation();
+            animateCardExit(id, () => {
+                const idx = state.completed.findIndex(g => g.id === id);
+                if (idx !== -1) {
+                    const game = state.completed.splice(idx, 1)[0];
+                    const restoreIdx = (typeof game.toPlayIndex === 'number' && game.toPlayIndex <= state.toPlay.length)
+                        ? game.toPlayIndex
+                        : state.toPlay.length;
+                    state.toPlay.splice(restoreIdx, 0, game);
+                    saveOnly();
+                    triggerEntranceAnim = false;
+                }
+            });
         };
 
-        window.moveToDone = (id, e) => moveLogic(id, 'toPlay', 'completed', e);
-        window.moveToToPlay = (id, e) => moveLogic(id, 'completed', 'toPlay', e);
+        // Wywołanie modala usuwania
         window.removeGame = (id, list, e) => {
-            e.target.closest('.game-card').classList.add('card-exit-anim');
-            setTimeout(() => { state[list] = state[list].filter(g => g.id !== id); saveOnly(); render(); }, 300);
+            if (e) e.stopPropagation();
+            pendingDeleteId = id;
+            pendingDeleteList = list;
+            const game = state[list].find(g => g.id === id);
+            if (!game) return;
+
+            document.getElementById('deleteGameName').innerText = game.name;
+            document.getElementById('deleteModal').style.display = 'flex';
+        };
+
+        window.closeDeleteModal = () => {
+            document.getElementById('deleteModal').style.display = 'none';
+            pendingDeleteId = null;
+            pendingDeleteList = null;
+        };
+
+        window.executeDelete = () => {
+            if (pendingDeleteId && pendingDeleteList) {
+                const delId = pendingDeleteId;
+                const delList = pendingDeleteList;
+                closeDeleteModal();
+                
+                animateCardExit(delId, () => {
+                    state[delList] = state[delList].filter(g => g.id !== delId);
+                    saveOnly();
+                    triggerEntranceAnim = false;
+                });
+            } else {
+                closeDeleteModal();
+            }
         };
 
         window.saveGameNote = (id, list, inputEl) => {
@@ -424,63 +684,124 @@
             }
         };
 
-        function renderGrid(elementId, list, type, withAnim) {
-            const platformFilter = document.getElementById('platformFilter').value;
-            const sortMode = document.getElementById('sortFilter').value;
-            
-            let filtered = list.filter(g => platformFilter === 'all' || g.platform.includes(platformFilter));
-            
-            if (sortMode === 'az') {
-                filtered.sort((a, b) => a.name.localeCompare(b.name));
-            } else if (sortMode === 'za') {
-                filtered.sort((a, b) => b.name.localeCompare(a.name));
+        function sortGames(list) {
+            const sortValue = document.getElementById('sortFilter').value;
+            const copy = [...list];
+
+            if (sortValue === 'az') {
+                return copy.sort((a, b) => a.name.localeCompare(b.name, 'pl', { sensitivity: 'base' }));
             }
+            if (sortValue === 'za') {
+                return copy.sort((a, b) => b.name.localeCompare(a.name, 'pl', { sensitivity: 'base' }));
+            }
+            return copy;
+        }
+
+        function renderGrid(elementId, list, type) {
+            const platformFilter = document.getElementById('platformFilter').value;
+            const filtered = sortGames(list.filter(g =>
+                platformFilter === 'all' || String(g.platform || '').includes(platformFilter)
+            ));
 
             const container = document.getElementById(elementId);
-            container.innerHTML = filtered.map(g => {
-                const pCls = g.platform.includes('PlayStation') ? 'badge-ps' : (g.platform.includes('Xbox') ? 'badge-xbox' : 'badge-pc');
+            container.innerHTML = filtered.map((g, index) => {
+                const pCls = String(g.platform || '').includes('PlayStation')
+                    ? 'badge-ps'
+                    : (String(g.platform || '').includes('Xbox') ? 'badge-xbox' : 'badge-pc');
+
+                const imageUrl = Array.isArray(g.screenshots) && g.screenshots.length
+                    ? g.screenshots[g.currentShotIdx || 0]
+                    : 'https://via.placeholder.com/600x800?text=Brak+Ok%C5%82adki';
+
+                const animStyle = triggerEntranceAnim 
+                    ? `animation: staggeredCardEntrance 0.45s var(--bezier) backwards; animation-delay: ${index * 0.04}s;` 
+                    : `animation: none;`;
+
                 return `
-                <div class="game-card" style="${withAnim ? '' : 'animation:none;'}">
+                <div class="game-card" data-id="${g.id}" style="view-transition-name: card-${g.id}; ${animStyle}">
                     <div class="img-box">
-                        <img src="${optimizeImg(g.screenshots[g.currentShotIdx])}" class="main-img">
+                        <img src="${optimizeImg(imageUrl)}" class="main-img" alt="${g.name}" loading="lazy">
+                        ${Array.isArray(g.screenshots) && g.screenshots.length > 1 ? `
                         <div class="gallery-nav">
-                            <button class="nav-arrow" onclick="changeImg('${g.id}', '${type}', -1, event)"><i class="fa-solid fa-chevron-left"></i></button>
-                            <button class="nav-arrow" onclick="changeImg('${g.id}', '${type}', 1, event)"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
+                            <button class="nav-arrow" onclick="changeImg('${g.id}', '${type}', -1, event)" aria-label="Poprzednie zdjęcie"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button class="nav-arrow" onclick="changeImg('${g.id}', '${type}', 1, event)" aria-label="Następne zdjęcie"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>` : ''}
                         <div class="card-overlay">
-                            ${type === 'toPlay' ? `<button class="action-btn" onclick="moveToDone('${g.id}', event)"><i class="fa-solid fa-check" style="color:#10b981"></i></button>` : `<button class="action-btn" onclick="moveToToPlay('${g.id}', event)"><i class="fa-solid fa-rotate-left"></i></button>`}
+                            ${type === 'toPlay'
+                                ? `<button class="action-btn" onclick="moveToDone('${g.id}', event)"><i class="fa-solid fa-check" style="color:#10b981"></i></button>`
+                                : `<button class="action-btn" onclick="moveToToPlay('${g.id}', event)"><i class="fa-solid fa-rotate-left"></i></button>`}
                             <button class="action-btn" onclick="removeGame('${g.id}', '${type}', event)"><i class="fa-solid fa-trash-can" style="color:#ef4444"></i></button>
                         </div>
                     </div>
                     <div class="game-info">
                         <div class="platform-badge ${pCls}">${g.platform}</div>
-                        <div class="game-title">${g.name}</div>                        
-                        <input type="text" class="note-input" placeholder="Notatka..." value="${g.note || ''}" onchange="saveGameNote('${g.id}', '${type}', this)">
+                        <div class="game-title">${g.name}</div>
+                        <input type="text" class="note-input" placeholder="" value="${String(g.note || '').replace(/"/g, '&quot;')}" onchange="saveGameNote('${g.id}', '${type}', this)">
                     </div>
                 </div>`;
             }).join('');
         }
 
-        function render(withAnim = false) { 
+        function applyControls() {
+            const sortValue = document.getElementById('sortFilter').value;
+            const platformValue = document.getElementById('platformFilter').value;
+            localStorage.setItem('gt_v9_sort', sortValue);
+            localStorage.setItem('gt_v9_platform_filter', platformValue);
+            triggerEntranceAnim = true;
+            render();
+        }
+
+        function render() { 
             document.getElementById('statToPlay').innerText = state.toPlay.length;
             document.getElementById('statDone').innerText = state.completed.length;
 
-            renderGrid('toPlayGrid', state.toPlay, 'toPlay', withAnim); 
-            renderGrid('completedGrid', state.completed, 'completed', withAnim); 
+            renderGrid('toPlayGrid', state.toPlay, 'toPlay'); 
+            renderGrid('completedGrid', state.completed, 'completed'); 
+
+            triggerEntranceAnim = false;
         }
 
-        window.exportData = () => { const blob = new Blob([JSON.stringify(state)], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = "biblioteka.json"; a.click(); };
-        window.importData = (e) => { const reader = new FileReader(); reader.onload = (ev) => { state = JSON.parse(ev.target.result); saveOnly(); render(true); }; reader.readAsText(e.target.files[0]); };
+        window.exportData = () => { 
+            const dateStr = new Date().toISOString().split('T')[0];
+            const blob = new Blob([JSON.stringify(state)], {type: "application/json"}); 
+            const url = URL.createObjectURL(blob); 
+            const a = document.createElement('a'); 
+            a.href = url; 
+            a.download = `biblioteka_${dateStr}.json`; 
+            a.click(); 
+        };
+        
+        window.importData = (e) => { 
+            const reader = new FileReader(); 
+            reader.onload = (ev) => { 
+                state = JSON.parse(ev.target.result);
+                state.toPlay = Array.isArray(state.toPlay) ? state.toPlay : [];
+                state.completed = Array.isArray(state.completed) ? state.completed : [];
+                [...state.toPlay, ...state.completed].forEach(g => {
+                    if (typeof g.releaseDate === 'undefined') g.releaseDate = 0;
+                    if (typeof g.currentShotIdx !== 'number') g.currentShotIdx = 0;
+                    if (!Array.isArray(g.screenshots) || g.screenshots.length === 0) {
+                        g.screenshots = ['https://via.placeholder.com/600x800?text=Brak+Ok%C5%82adki'];
+                    }
+                    if (g.currentShotIdx >= g.screenshots.length) g.currentShotIdx = 0;
+                });
+                saveOnly(); 
+                triggerEntranceAnim = true;
+                render(); 
+            }; 
+            reader.readAsText(e.target.files[0]); 
+        };
         
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 closeModal();
+                closeDeleteModal();
                 suggBox.style.display = 'none';
             }
         });
 
         window.onclick = (e) => { if (!e.target.closest('.search-container')) suggBox.style.display = 'none'; };
-        render(true);
+        render();
     </script>
 </body>
 </html>
